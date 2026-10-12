@@ -1,0 +1,26 @@
+services:
+  trams-db:
+    image: postgres:16-alpine
+    container_name: trams-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${TRAMS_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${TRAMS_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${TRAMS_POSTGRES_DB}
+    ports:
+      # Bound to localhost only, so nothing else on your network can reach it.
+      - 5003:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Any .sql file in ./db/init runs once, the first time the DB is created.
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trams} -d ${POSTGRES_DB:-trams}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+
+volumes:
+  pgdata:
